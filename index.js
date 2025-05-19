@@ -3,23 +3,17 @@ const express = require('express');
 const app = express();
 const PORT = 3000;
 
-// Middleware para recibir JSON
+// Middleware para leer JSON
 app.use(express.json());
 
-// Ruta GET
-app.get('/', (req, res) => {
-  res.send('¡Hola desde la API REST!');
-});
+// Importa rutas
+const usuariosRoutes = require('./routes/usuarios');
+app.use('/api/usuarios', usuariosRoutes);
 
-// Ruta POST de ejemplo
-app.post('/usuarios', (req, res) => {
-  const datos = req.body;
-  res.json({
-    mensaje: 'Usuario recibido',
-    datos: datos
-  });
-});
+const almacenesRoutes = require('./routes/almacenes');
+app.use('/api/almacenes', almacenesRoutes);
 
+// Servidor iniciado
 app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
+  console.log(`Servidor activo en http://localhost:${PORT}`);
 });
