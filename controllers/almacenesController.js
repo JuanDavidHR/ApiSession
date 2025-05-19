@@ -1,7 +1,8 @@
 const { poolPromise, sql } = require('../config/db');
 
 exports.insertarAlmacen = async (req, res) => {
-  const { codigo, nombre, direccion, ubigeo, status, usuario_creador } = req.body;
+  const { codigo, nombre, direccion, ubigeo, status } = req.body;
+  const usuario_creador = req.usuario.id; // ← viene del token
 
   try {
     const pool = await poolPromise;
@@ -22,9 +23,39 @@ exports.insertarAlmacen = async (req, res) => {
       id: nuevoId
     });
   } catch (err) {
-    res.status(500).json({
-      mensaje: 'Error al insertar almacén',
-      error: err.message
-    });
+    res.status(500).json({ mensaje: 'Error al insertar almacén', error: err.message });
+  }
+};
+
+exports.listarAlmacenes = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .query('SELECT * FROM Almacenes ORDER BY createdate DESC');
+
+    res.json(result.recordset);
+  } catch (err) {
+    res.status(500).json({ mensaje: 'Error al listar almacenes', error: err.message });
+  }
+};
+
+exports.obtenerAlmacenPorCodigo = async (req, res) => {
+  const { codigo } = req.params;
+
+  try {
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input('codigo', sql.VarChar, codigo)
+      .query('SELECT * FROM Almacenes WHERE codigo = @codigo');
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ mensaje: 'Almacén no encontrado' });
+    }
+
+    res.json(result.recordset[0]);
+  } catch (err) {
+    res.status(500).json({ mensaje: 'Error al buscar almacén', error: err.message });
   }
 };

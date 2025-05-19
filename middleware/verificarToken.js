@@ -1,20 +1,20 @@
 const { poolPromise, sql } = require('../config/db');
 
 const verificarToken = async (req, res, next) => {
-  const token = req.headers['authorization']; // se espera "Bearer <token>"
+  const authHeader = req.headers['authorization'];
 
-  if (!token) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ mensaje: 'Token requerido' });
   }
 
-  const tokenSolo = token.replace('Bearer ', '');
+  const token = authHeader.replace('Bearer ', '');
 
   try {
     const pool = await poolPromise;
     const result = await pool
       .request()
-      .input('Token', sql.VarChar, tokenSolo)
-      .query('SELECT * FROM Usuarios WHERE token = @Token');
+      .input('Token', sql.VarChar, token)
+      .query('SELECT id, token_expira FROM Usuarios WHERE token = @Token');
 
     if (result.recordset.length === 0) {
       return res.status(401).json({ mensaje: 'Token inválido' });
@@ -27,8 +27,7 @@ const verificarToken = async (req, res, next) => {
       return res.status(401).json({ mensaje: 'Token expirado' });
     }
 
-    // ✅ Token válido, continúa
-    req.usuario = usuario;
+    req.usuario = usuario; // ← Aquí va el ID del usuario autenticado
     next();
   } catch (err) {
     res.status(500).json({ mensaje: 'Error al validar token', error: err.message });
