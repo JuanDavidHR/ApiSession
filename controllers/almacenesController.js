@@ -8,7 +8,7 @@ exports.insertarAlmacen = async (req, res) => {
     const pool = await poolPromise;
     const result = await pool
       .request()
-      .input('codigo', sql.VarChar, codigo)
+      .input('codigo', sql.VarChar, codigo || null)
       .input('nombre', sql.VarChar, nombre)
       .input('direccion', sql.VarChar, direccion)
       .input('ubigeo', sql.VarChar, ubigeo)

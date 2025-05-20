@@ -7,6 +7,7 @@ const verificarToken = require('../middleware/verificarToken');
 router.get('/', usuariosController.obtenerUsuarios);
 router.post('/', usuariosController.crearUsuario);
 router.post('/login', usuariosController.loginUsuario);
+router.post('/logout', verificarToken, usuariosController.logoutUsuario);
 router.get('/perfil', verificarToken, (req, res) => {
   res.json({
     mensaje: 'Perfil accedido correctamente',

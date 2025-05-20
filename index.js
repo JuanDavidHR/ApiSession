@@ -1,8 +1,11 @@
 // index.js
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const PORT = 3000;
 
+// 🔥 CORS: permitir acceso desde cualquier origen (como localhost:8080)
+app.use(cors());
 // Middleware para leer JSON
 app.use(express.json());
 

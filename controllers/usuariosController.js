@@ -84,7 +84,7 @@ exports.loginUsuario = async (req, res) => {
     }
 
     const token = uuidv4();
-    const expira = new Date(Date.now() + 5 * 60000);
+    const expira = new Date(Date.now() + 5 * 120000);
 
     await pool
       .request()
@@ -114,3 +114,26 @@ exports.loginUsuario = async (req, res) => {
   }
 };
 
+exports.logoutUsuario = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const token = req.headers['authorization']?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(400).json({ mensaje: 'Token no proporcionado' });
+    }
+
+    // Actualiza el status_login a 2 (logout)
+    await pool.request()
+      .input('Token', sql.VarChar, token)
+      .query(`
+        UPDATE Logeos
+        SET status_login = 2
+        WHERE token = @Token
+      `);
+
+    res.json({ mensaje: 'Logout exitoso' });
+  } catch (error) {
+    res.status(500).json({ mensaje: 'Error al cerrar sesión', error: error.message });
+  }
+};

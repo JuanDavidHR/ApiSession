@@ -14,24 +14,33 @@ const verificarToken = async (req, res, next) => {
     const result = await pool
       .request()
       .input('Token', sql.VarChar, token)
-      .query('SELECT id, token_expira FROM Usuarios WHERE token = @Token');
+       .execute('LOGEOS_OBTENER_POR_TOKEN');
 
     if (result.recordset.length === 0) {
       return res.status(401).json({ mensaje: 'Token inválido' });
     }
 
-    const usuario = result.recordset[0];
+    const logeo = result.recordset[0];
     const ahora = new Date();
+    const expira = new Date(logeo.token_expira);
 
-    if (new Date(usuario.token_expira) < ahora) {
-      return res.status(401).json({ mensaje: 'Token expirado' });
+    // Si expiró, actualizar estado en BD a 2
+    if (expira < ahora) {
+      await pool.request()
+          .input('Token', sql.VarChar, token)
+          .execute('LOGEOS_CERRAR_SESION');
+
+      return res.status(401).json({ mensaje: 'Token expirado, sesión cerrada automáticamente' });
     }
 
-    req.usuario = usuario; // ← Aquí va el ID del usuario autenticado
+    if (logeo.status_login !== 1) {
+      return res.status(401).json({ mensaje: 'Sesión cerrada' });
+    }
+
+    req.usuario = logeo;
     next();
   } catch (err) {
-    res.status(500).json({ mensaje: 'Error al validar token', error: err.message });
+    return res.status(500).json({ mensaje: 'Error del servidor', error: err.message });
   }
 };
-
 module.exports = verificarToken;
