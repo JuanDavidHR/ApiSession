@@ -59,3 +59,23 @@ exports.obtenerAlmacenPorCodigo = async (req, res) => {
     res.status(500).json({ mensaje: 'Error al buscar almacén', error: err.message });
   }
 };
+
+exports.darDeBajaAlmacen = async (req, res) => {
+  const { codigo } = req.body;
+
+  try {
+    const pool = await poolPromise;
+    await pool
+      .request()
+      .input('codigo', sql.VarChar, codigo)
+      .query(`
+        UPDATE Almacenes
+        SET status = 2
+        WHERE codigo = @codigo
+      `);
+
+    res.json({ mensaje: 'Almacén dado de baja correctamente' });
+  } catch (err) {
+    res.status(500).json({ mensaje: 'Error al dar de baja el almacén', error: err.message });
+  }
+}
